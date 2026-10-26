@@ -127,3 +127,9 @@ After changes:
 Do not scaffold unrelated services.
 
 Do not commit, push, or deploy without authorization.
+
+## Scoped Constitution
+
+Before making backend architectural or implementation
+changes, read backend/CONSTITUTION.md and follow its
+applicable requirements.
