@@ -1,0 +1,245 @@
+openapi: 3.1.0
+info:
+  title: Garage Platform Candidate HTTP Contracts
+  version: 0.1.0-draft
+  description: >-
+    DESIGN PROPOSAL ONLY. Logical review of selected endpoints; this does not
+    define an approved gateway or combined deployed service. Each operation
+    must be assigned to its owning bounded context before implementation.
+  x-design-status: draft-not-approved
+servers:
+  - url: https://api.example.invalid
+    description: Placeholder only; not a real endpoint
+tags:
+  - name: Vehicles
+  - name: Maintenance
+  - name: PublicAccess
+paths:
+  /v1/vehicles:
+    post:
+      tags: [Vehicles]
+      summary: Register vehicle (proposed)
+      operationId: registerVehicle
+      security: [{BearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/VehicleRegistrationRequest'}
+      responses:
+        '201':
+          description: Vehicle registered
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/VehicleSummary'}
+        '400': {$ref: '#/components/responses/Problem'}
+        '401': {$ref: '#/components/responses/Problem'}
+        '403': {$ref: '#/components/responses/Problem'}
+        '409': {$ref: '#/components/responses/Problem'}
+  /v1/vehicles/{vehicleId}:
+    get:
+      tags: [Vehicles]
+      summary: Get authorized vehicle summary
+      operationId: getVehicle
+      security: [{BearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      responses:
+        '200':
+          description: Authorized summary; fields can be restricted by policy
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/VehicleSummary'}
+        '401': {$ref: '#/components/responses/Problem'}
+        '403': {$ref: '#/components/responses/Problem'}
+        '404': {$ref: '#/components/responses/Problem'}
+  /v1/vehicles/{vehicleId}/maintenance-records:
+    post:
+      tags: [Maintenance]
+      summary: Record completed self-reported vehicle maintenance (candidate)
+      operationId: recordMaintenance
+      security: [{BearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/MaintenanceCompletionRequest'}
+      responses:
+        '201':
+          description: Maintenance recorded in owning context; odometer update is eventual
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MaintenanceReceipt'}
+        '401': {$ref: '#/components/responses/Problem'}
+        '403': {$ref: '#/components/responses/Problem'}
+        '409': {$ref: '#/components/responses/Problem'}
+        '422': {$ref: '#/components/responses/Problem'}
+  /v1/vehicles/{vehicleId}/public-grants:
+    post:
+      tags: [PublicAccess]
+      summary: Issue a scoped public access grant (candidate)
+      operationId: issuePublicGrant
+      security: [{BearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PublicGrantRequest'}
+      responses:
+        '201':
+          description: Secret returned once; never store raw token in logs
+          headers:
+            Cache-Control:
+              schema: {type: string, const: no-store}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PublicGrantIssued'}
+        '403': {$ref: '#/components/responses/Problem'}
+  /public/v/{publicId}/view:
+    get:
+      tags: [PublicAccess]
+      summary: Read sanitized vehicle projection using valid grant token
+      operationId: getPublicVehicle
+      security: [{QrGrantToken: []}]
+      parameters:
+        - name: publicId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Restricted projection, no private data by default
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PublicVehicleProjection'}
+        '401': {$ref: '#/components/responses/Problem'}
+        '404': {$ref: '#/components/responses/Problem'}
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Placeholder for approved OIDC access token scheme
+    QrGrantToken:
+      type: apiKey
+      in: header
+      name: X-Public-Access-Token
+      description: >-
+        Illustrative token delivery; QR landing flow and cache/referrer policy
+        require security review before contract approval.
+  parameters:
+    VehicleId:
+      name: vehicleId
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: {type: string, minLength: 8, maxLength: 128}
+      description: Scope by principal/resource/operation; reject changed payload reuse
+  responses:
+    Problem:
+      description: Machine-readable problem without internal stack traces or PII
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Problem'}
+  schemas:
+    VehicleRegistrationRequest:
+      type: object
+      additionalProperties: false
+      required: [vehicleType, manufacturer, model, modelYear]
+      properties:
+        vehicleType: {type: string, enum: [MOTORCYCLE, PASSENGER_CAR, PICKUP, OTHER]}
+        manufacturer: {type: string, minLength: 1}
+        model: {type: string, minLength: 1}
+        modelYear: {type: integer, minimum: 1886}
+        vin: {type: [string, 'null']}
+        licensePlate: {type: [string, 'null']}
+        licensePlateJurisdiction: {type: [string, 'null']}
+    VehicleSummary:
+      type: object
+      required: [vehicleId, vehicleType, manufacturer, model, modelYear]
+      properties:
+        vehicleId: {type: string, format: uuid}
+        vehicleType: {type: string}
+        manufacturer: {type: string}
+        model: {type: string}
+        modelYear: {type: integer}
+        displayName: {type: [string, 'null']}
+        licensePlate: {type: [string, 'null'], description: Returned only if authorized}
+        odometerSummary: {$ref: '#/components/schemas/OdometerSummary'}
+    OdometerMeasurement:
+      type: object
+      required: [value, unit]
+      properties:
+        value: {type: string, pattern: '^(0|[1-9][0-9]*)(\.[0-9]+)?$'}
+        unit: {type: string, enum: [KM, MI]}
+    OdometerSummary:
+      type: object
+      properties:
+        measurement: {$ref: '#/components/schemas/OdometerMeasurement'}
+        observedAt: {type: string, format: date-time}
+        synchronizationStatus: {type: string, enum: [CURRENT, UPDATING, NEEDS_REVIEW, UNKNOWN]}
+    MaintenanceCompletionRequest:
+      type: object
+      additionalProperties: false
+      required: [performedAt, details, odometer, observedAt]
+      properties:
+        performedAt: {type: string, format: date-time}
+        details: {type: string, minLength: 1}
+        odometer: {$ref: '#/components/schemas/OdometerMeasurement'}
+        observedAt: {type: string, format: date-time}
+        partsDescription: {type: [string, 'null']}
+        source: {type: string, const: OWNER_REPORTED}
+    MaintenanceReceipt:
+      type: object
+      required: [maintenanceId, vehicleId, status, odometerPropagation]
+      properties:
+        maintenanceId: {type: string, format: uuid}
+        vehicleId: {type: string, format: uuid}
+        status: {type: string, const: COMPLETED}
+        odometerPropagation: {type: string, enum: [PENDING, PROCESSED, NEEDS_REVIEW]}
+    PublicGrantRequest:
+      type: object
+      required: [allowedFields]
+      properties:
+        allowedFields:
+          type: array
+          items: {type: string, enum: [MAKE_MODEL, VEHICLE_TYPE, MAINTENANCE_SUMMARY, LICENSE_PLATE, VIN]}
+          uniqueItems: true
+        expiresAt: {type: [string, 'null'], format: date-time}
+    PublicGrantIssued:
+      type: object
+      required: [grantId, token]
+      properties:
+        grantId: {type: string, format: uuid}
+        token: {type: string, description: High-entropy secret returned once}
+    PublicVehicleProjection:
+      type: object
+      properties:
+        vehicleType: {type: string}
+        makeModel: {type: string}
+        lastMaintenanceSummary: {type: string}
+        nextMaintenanceSummary: {type: string}
+        licensePlate: {type: string, description: Only when explicitly granted}
+        vin: {type: string, description: Only when explicitly granted}
+    Problem:
+      type: object
+      required: [type, title, status, code]
+      properties:
+        type: {type: string, format: uri}
+        title: {type: string}
+        status: {type: integer}
+        detail: {type: string}
+        code: {type: string}
+        traceId: {type: string}

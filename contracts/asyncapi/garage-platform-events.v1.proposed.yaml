@@ -1,0 +1,108 @@
+asyncapi: '2.6.0'
+id: urn:garage-platform:integration-events:proposal
+info:
+  title: Garage Platform Integration Events - Draft
+  version: 0.1.0-draft
+  description: >-
+    DESIGN PROPOSAL ONLY. Kafka naming, payload representation and schema
+    registry remain open; not an approved production integration contract.
+  x-design-status: draft-not-approved
+servers:
+  kafkaCandidate:
+    url: kafka.invalid:9092
+    protocol: kafka
+    description: Placeholder; not a real broker
+channels:
+  maintenance.completed.v1:
+    description: Candidate topic name for completed maintenance business facts
+    publish:
+      operationId: publishMaintenanceCompleted
+      message:
+        $ref: '#/components/messages/MaintenanceCompleted'
+  vehicle.odometer.recorded.v1:
+    description: Candidate topic name for accepted odometer observations
+    publish:
+      operationId: publishVehicleOdometerRecorded
+      message:
+        $ref: '#/components/messages/VehicleOdometerRecorded'
+  inventory.stock-reserved.v1:
+    description: Candidate topic for successful stock reservations
+    publish:
+      operationId: publishStockReserved
+      message:
+        $ref: '#/components/messages/StockReserved'
+components:
+  messages:
+    MaintenanceCompleted:
+      name: MaintenanceCompleted
+      title: MaintenanceCompleted v1 (proposed schema)
+      contentType: application/json
+      payload:
+        type: object
+        required: [eventId, eventType, version, occurredAt, correlationId, aggregateId, data]
+        properties:
+          eventId: {type: string, format: uuid}
+          eventType: {type: string, const: MaintenanceCompleted}
+          version: {type: integer, const: 1}
+          occurredAt: {type: string, format: date-time}
+          correlationId: {type: string, format: uuid}
+          causationId: {type: string, format: uuid}
+          aggregateId: {type: string, format: uuid}
+          subjectId: {type: string, format: uuid, description: VehicleId candidate partition key}
+          data:
+            type: object
+            required: [maintenanceId, vehicleId, completedAt, odometer]
+            properties:
+              maintenanceId: {type: string, format: uuid}
+              vehicleId: {type: string, format: uuid}
+              completedAt: {type: string, format: date-time}
+              source: {type: string, enum: [OWNER_REPORTED, WORKSHOP_RECORDED]}
+              sourceRevision: {type: integer, minimum: 1}
+              odometer:
+                type: object
+                required: [value, unit, observedAt]
+                properties:
+                  value: {type: string, pattern: '^(0|[1-9][0-9]*)(\.[0-9]+)?$'}
+                  unit: {type: string, enum: [KM, MI]}
+                  observedAt: {type: string, format: date-time}
+    VehicleOdometerRecorded:
+      name: VehicleOdometerRecorded
+      contentType: application/json
+      payload:
+        type: object
+        required: [eventId, eventType, version, occurredAt, correlationId, aggregateId, data]
+        properties:
+          eventId: {type: string, format: uuid}
+          eventType: {type: string, const: VehicleOdometerRecorded}
+          version: {type: integer, const: 1}
+          occurredAt: {type: string, format: date-time}
+          correlationId: {type: string, format: uuid}
+          aggregateId: {type: string, format: uuid}
+          data:
+            type: object
+            required: [vehicleId, observationId, status]
+            properties:
+              vehicleId: {type: string, format: uuid}
+              observationId: {type: string, format: uuid}
+              status: {type: string, enum: [ACCEPTED, FLAGGED]}
+              observedAt: {type: string, format: date-time}
+    StockReserved:
+      name: StockReserved
+      contentType: application/json
+      payload:
+        type: object
+        required: [eventId, eventType, version, occurredAt, correlationId, aggregateId, data]
+        properties:
+          eventId: {type: string, format: uuid}
+          eventType: {type: string, const: StockReserved}
+          version: {type: integer, const: 1}
+          occurredAt: {type: string, format: date-time}
+          correlationId: {type: string, format: uuid}
+          aggregateId: {type: string, format: uuid}
+          data:
+            type: object
+            required: [operationId, reservationId, orderId]
+            properties:
+              operationId: {type: string, format: uuid}
+              reservationId: {type: string, format: uuid}
+              orderId: {type: string, format: uuid}
