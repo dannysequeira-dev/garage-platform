@@ -9,23 +9,24 @@ and what consequences are accepted.
 
 ## Decision Index
 
-| ADR | Title | Status |
-| --- | --- | --- |
-| [0001](0001-monorepo-strategy.md) | Single Monorepo with Independent Build Ecosystems | Accepted |
-| [0002](0002-modular-hexagonal-backend.md) | Modular Hexagonal Backend Architecture | Accepted |
-| [0003](0003-rich-domain-model.md) | Rich Domain Model and Aggregate Design | Accepted |
-| [0004](0004-event-driven-integration.md) | Kafka and Event-Driven Integration | Accepted |
-| [0005](0005-transactional-outbox-inbox.md) | Local Transactions, Outbox, and Inbox | Accepted |
-| [0006](0006-saga-coordination.md) | Saga-Based Distributed Workflow Coordination | Accepted |
-| [0007](0007-framework-independent-frontend.md) | Framework-Independent Frontend Architecture | Accepted |
-| [0008](0008-shared-ui-design-system.md) | Shared UI and Design System | Accepted |
-| [0009](0009-contract-governance.md) | API and Integration Contract Governance | Accepted |
-| [0010](0010-identity-and-tenancy.md) | Identity, Authorization, and Multi-Tenancy | Draft |
-| [0011](0011-public-qr-access.md) | Scoped and Revocable Public QR Access | Accepted |
-| [0012](0012-observability-strategy.md) | Observability and Infrastructure Monitoring | Draft |
-| [0013](0013-delivery-and-infrastructure.md) | Delivery and Infrastructure Strategy | Draft |
-| [0014](0014-testing-and-architecture-enforcement.md) | Testing and Architectural Enforcement | Accepted |
-| [0015](0015-bounded-context-boundaries.md) | Candidate Bounded Contexts and Service Boundaries | Draft |
+| ADR                                                  | Title                                             | Status   |
+| ---------------------------------------------------- | ------------------------------------------------- | -------- |
+| [0001](0001-monorepo-strategy.md)                    | Single Monorepo with Independent Build Ecosystems | Accepted |
+| [0002](0002-modular-hexagonal-backend.md)            | Modular Hexagonal Backend Architecture            | Accepted |
+| [0003](0003-rich-domain-model.md)                    | Rich Domain Model and Aggregate Design            | Accepted |
+| [0004](0004-event-driven-integration.md)             | Kafka and Event-Driven Integration                | Accepted |
+| [0005](0005-transactional-outbox-inbox.md)           | Local Transactions, Outbox, and Inbox             | Accepted |
+| [0006](0006-saga-coordination.md)                    | Saga-Based Distributed Workflow Coordination      | Accepted |
+| [0007](0007-framework-independent-frontend.md)       | Framework-Independent Frontend Architecture       | Accepted |
+| [0008](0008-shared-ui-design-system.md)              | Shared UI and Design System                       | Accepted |
+| [0009](0009-contract-governance.md)                  | API and Integration Contract Governance           | Accepted |
+| [0010](0010-identity-and-tenancy.md)                 | Identity, Authorization, and Multi-Tenancy        | Draft    |
+| [0011](0011-public-qr-access.md)                     | Scoped and Revocable Public QR Access             | Accepted |
+| [0012](0012-observability-strategy.md)               | Observability and Infrastructure Monitoring       | Draft    |
+| [0013](0013-delivery-and-infrastructure.md)          | Delivery and Infrastructure Strategy              | Draft    |
+| [0014](0014-testing-and-architecture-enforcement.md) | Testing and Architectural Enforcement             | Accepted |
+| [0015](0015-bounded-context-boundaries.md)           | Candidate Bounded Contexts and Service Boundaries | Draft    |
+| [0016](0016-maintenance-odometer-propagation.md)     | Maintenance-to-Vehicle Odometer Propagation       | Accepted |
 
 ## ADR Lifecycle
 
